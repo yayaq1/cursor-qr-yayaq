@@ -406,13 +406,21 @@ function QRCodeGeneratorContent() {
       transition={{ duration: 0.3 }}
     >
       <div className="text-center max-w-lg mx-auto px-6">
+        <motion.img
+          src="/brand/grok-wordmark-light.svg"
+          alt="Grok"
+          className="mx-auto mb-6 h-8 w-auto"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.2 }}
+        />
         <motion.h1 
           className="headline text-4xl font-bold text-white mb-4"
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.2, delay: 0.05 }}
         >
-          <span style={{ color: 'var(--accent-blue)' }}>Cursor Credits</span> QR Code Generator
+          <span style={{ color: 'var(--accent-blue)' }}>Grok Bot</span> Credits QR
         </motion.h1>
         <motion.p 
           className="text-lg mb-4" 
@@ -421,7 +429,7 @@ function QRCodeGeneratorContent() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.2, delay: 0.1 }}
         >
-          Generate QR codes for your referral links
+          Print referral QR codes · SpaceXAI
         </motion.p>
         
         <motion.div 
@@ -587,7 +595,7 @@ function QRCodeGeneratorContent() {
             background: 'var(--card-background)', 
             border: '1px solid var(--border-color)'
           }}
-          placeholder={`Enter your Cursor referral links, one per line:\n\n${CURSOR_BASE_URL}referral?code=EXAMPLE1\n${CURSOR_BASE_URL}referral?code=EXAMPLE2\n${CURSOR_BASE_URL}referral?code=EXAMPLE3`}
+          placeholder={`Enter referral links, one per line:\n\n${CURSOR_BASE_URL}referral?code=EXAMPLE1\n${CURSOR_BASE_URL}referral?code=EXAMPLE2\n${CURSOR_BASE_URL}referral?code=EXAMPLE3`}
           value={links}
           onChange={(e) => setLinks(e.target.value)}
           initial={{ y: 10, opacity: 0 }}
@@ -733,11 +741,12 @@ function QRCodeGeneratorContent() {
                     size={120}
                     bgColor="var(--card-background)"
                     fgColor="white"
-                    logoImage="/cursor-logo-bw.png"
-                    logoWidth={32}
+                    ecLevel="H"
+                    logoImage="/brand/grok-mark-qr.png"
+                    logoWidth={28}
                     logoOpacity={1}
-                    logoPadding={0}
-                    logoPaddingStyle="square"
+                    logoPadding={2}
+                    logoPaddingStyle="circle"
                     removeQrCodeBehindLogo={true}
                     qrStyle="squares"
                   />
@@ -804,12 +813,12 @@ function QRCodeGeneratorContent() {
                       </a>
                       
                       <a 
-                        href="https://cursor.com" 
+                        href="https://x.ai" 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-gray-400 hover:text-purple-400 transition-colors"
+                        className="text-gray-400 hover:text-white transition-colors"
                       >
-                        Built with Cursor
+                        SpaceXAI
                       </a>
                     </div>
                   </div>
@@ -852,10 +861,12 @@ function QRCodeGeneratorContent() {
                           if (cellNumber === null) {
                             // Empty cell - maintain grid structure
                             return (
-                              <div key={`${rowIndex}-${colIndex}`} className="print-qr-item">
-                                <div className="qr-number"></div>
-                                <div className="qr-placeholder"></div>
-                                <div className="qr-url"></div>
+                              <div key={`${rowIndex}-${colIndex}`} className="print-qr-item print-qr-item--empty">
+                                <div className="qr-card-header" />
+                                <div className="qr-card-body">
+                                  <div className="qr-placeholder" />
+                                </div>
+                                <div className="qr-card-footer" />
                               </div>
                             );
                           }
@@ -863,40 +874,53 @@ function QRCodeGeneratorContent() {
                           // Find the QR data for this cell number
                           const qrData = qrLookup.get(cellNumber);
                           if (!qrData) {
-                            // Shouldn't happen, but handle gracefully
                             return (
                               <div key={`${rowIndex}-${colIndex}`} className="print-qr-item">
-                                <div className="qr-number">#{cellNumber}</div>
-                                <div className="qr-error">No data</div>
-                                <div className="qr-url"></div>
+                                <div className="qr-card-header">
+                                  <div className="qr-number">#{cellNumber}</div>
+                                </div>
+                                <div className="qr-card-body">
+                                  <div className="qr-error">No data</div>
+                                </div>
+                                <div className="qr-card-footer" />
                               </div>
                             );
                           }
                           
                           return (
                             <div key={`${rowIndex}-${colIndex}`} className="print-qr-item">
-                              <div className="qr-number">#{cellNumber}</div>
-                              <img src="/LOCKUP_HORIZONTAL_2D_LIGHT.svg" alt="Cursor" className="qr-logo" />
-                              {qrData.isValid ? (
-                              <QRCode 
-                                value={qrData.url} 
-                                size={180}
-                                bgColor="white"
-                                fgColor="black"
-                                logoImage="/cursor-logo-bw.png"
-                                logoWidth={50}
-                                logoOpacity={1}
-                                logoPadding={0}
-                                logoPaddingStyle="square"
-                                removeQrCodeBehindLogo={true}
-                                qrStyle="squares"
-                              />
-                              ) : (
-                                <div className="qr-error">
-                                  Invalid URL
-                                </div>
-                              )}
-                              <div className="qr-url">{sanitizeUrlForDisplay(qrData.url)}</div>
+                              <div className="qr-card-header">
+                                <div className="qr-number">#{cellNumber}</div>
+                                <img
+                                  src="/brand/grok-wordmark-print.svg"
+                                  alt="Grok"
+                                  className="qr-logo"
+                                />
+                              </div>
+                              <div className="qr-card-body">
+                                {qrData.isValid ? (
+                                  <QRCode
+                                    value={qrData.url}
+                                    size={152}
+                                    bgColor="white"
+                                    fgColor="black"
+                                    ecLevel="H"
+                                    logoImage="/brand/grok-mark-qr.png"
+                                    logoWidth={18}
+                                    logoOpacity={1}
+                                    logoPadding={1}
+                                    logoPaddingStyle="circle"
+                                    removeQrCodeBehindLogo={true}
+                                    qrStyle="squares"
+                                    quietZone={8}
+                                  />
+                                ) : (
+                                  <div className="qr-error">Invalid URL</div>
+                                )}
+                              </div>
+                              <div className="qr-card-footer">
+                                <div className="qr-url">{sanitizeUrlForDisplay(qrData.url)}</div>
+                              </div>
                             </div>
                           );
                         })
@@ -913,129 +937,166 @@ function QRCodeGeneratorContent() {
           @media print {
             * {
               -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
               color-adjust: exact !important;
             }
 
             @page {
-              size: A4;
-              margin: 0mm;
+              size: A4 portrait;
+              margin: 0;
+            }
+
+            html, body {
+              width: 210mm;
+              height: 297mm;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: white !important;
             }
 
             .print-container {
-              width: 100%;
-              height: 100%;
+              width: 210mm;
               background: white;
             }
 
             .print-page {
               page-break-after: always;
-              width: 100%;
-              height: 100vh;
+              break-after: page;
+              width: 210mm;
+              height: 297mm;
               display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
+              align-items: stretch;
+              justify-content: stretch;
               padding: 0;
+              margin: 0;
               background: white;
               box-sizing: border-box;
-              position: relative;
+              overflow: hidden;
             }
 
             .print-page:last-child {
               page-break-after: avoid;
+              break-after: avoid;
             }
 
             .print-grid {
               display: grid;
               grid-template-columns: repeat(3, 1fr);
               grid-template-rows: repeat(3, 1fr);
-              width: 100%;
-              max-width: 210mm;
-              height: 100%;
-              max-height: 297mm;
-              border: 1px solid #000;
+              width: 210mm;
+              height: 297mm;
+              border-top: 0.35mm solid #000;
+              border-left: 0.35mm solid #000;
               box-sizing: border-box;
             }
 
             .print-qr-item {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              padding: 8px;
+              display: grid;
+              grid-template-rows: 9mm minmax(0, 1fr) 8mm;
+              width: 100%;
+              height: 100%;
+              padding: 2.5mm 3mm 2mm;
               text-align: center;
               background: white;
-              border-right: 1px solid #000;
-              border-bottom: 1px solid #000;
+              border-right: 0.35mm solid #000;
+              border-bottom: 0.35mm solid #000;
               box-sizing: border-box;
               position: relative;
+              overflow: hidden;
             }
 
-            .print-qr-item:nth-child(3n) {
-              border-right: 1px solid #000;
+            .print-qr-item--empty {
+              background: white;
             }
 
-            .print-qr-item:nth-child(n+7) {
-              border-bottom: 1px solid #000;
+            .qr-card-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 2mm;
+              min-height: 0;
+              overflow: hidden;
             }
 
             .qr-number {
-              position: absolute;
-              top: 8px;
-              left: 8px;
-              font-weight: normal;
-              font-size: 14px;
-              color: var(--qr-card-text-color);
+              position: static;
+              flex: 0 0 auto;
+              font-weight: 600;
+              font-size: 11pt;
+              line-height: 1;
+              color: #111;
               font-family: var(--font-inter), Inter, sans-serif;
               z-index: 1;
             }
 
             .qr-logo {
-              position: absolute;
-              top: 8px;
-              right: 8px;
-              width: 75px;
-              height: auto;
-              opacity: 0.9;
+              position: static;
+              flex: 0 1 auto;
+              width: auto;
+              max-width: 28mm;
+              height: 5.5mm;
+              object-fit: contain;
+              object-position: right center;
+              opacity: 1;
             }
 
-            .qr-code {
-              margin: 4px auto;
-              display: block;
+            .qr-card-body {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 0;
+              overflow: hidden;
+            }
+
+            .qr-card-body canvas,
+            .qr-card-body img {
+              max-width: 100% !important;
+              max-height: 100% !important;
+              width: auto !important;
+              height: auto !important;
+            }
+
+            .qr-card-footer {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 0;
+              overflow: hidden;
+              padding-top: 0.8mm;
             }
 
             .qr-url {
-              position: absolute;
-              bottom: 8px;
-              left: 0;
-              right: 0;
-              font-size: 9px;
-              color: var(--qr-card-text-color);
+              position: static;
+              font-size: 5.25pt;
+              color: #111;
               font-family: var(--font-inter), Inter, sans-serif;
               line-height: 1.2;
               text-align: center;
               width: 100%;
-              padding: 0 8px;
+              max-height: 8mm;
+              padding: 0;
+              margin: 0;
+              overflow: hidden;
+              /* Prefer one line for typical referral URLs; wrap only if needed. */
+              white-space: nowrap;
             }
 
             .qr-error {
-              width: 180px;
-              height: 180px;
+              width: 40mm;
+              height: 40mm;
               background: #fee;
-              border: 1px solid #fcc;
+              border: 0.3mm solid #fcc;
               display: flex;
               align-items: center;
               justify-content: center;
-              font-size: 10px;
+              font-size: 8pt;
               color: #c33;
-              margin: 4px 0;
             }
 
             .qr-placeholder {
-              width: 180px;
-              height: 180px;
+              width: 40mm;
+              height: 40mm;
               background: transparent;
-              margin: 4px 0;
             }
           }
         `}</style>
