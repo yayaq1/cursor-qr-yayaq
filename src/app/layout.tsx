@@ -25,27 +25,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://cursor-credits-qr.vercel.app'),
-  title: "Cursor Credits QR Code Generator - Secure Batch Print Referral QR Codes",
-  description: "Securely generate multiple QR codes from Cursor referral links client-side (no data sent to server). Print in 9-per-page format for easy distribution of Cursor credits",
-  keywords: ["QR code", "Cursor", "referral", "generator", "batch print", "CSV upload", "secure", "private", "client-side"],
-  authors: [{ name: "Cursor Credits" }],
-  creator: "Cursor Credits QR Generator",
-  publisher: "Cursor Credits",
+  metadataBase: new URL('https://cursor-qr.vercel.app'),
+  title: "Grok Bot Credits QR Code Generator - SpaceXAI",
+  description: "Generate printable QR codes from Cursor referral / credit links. Branded for Grok Bot by SpaceXAI. Client-side only — nothing is uploaded to a server.",
+  keywords: ["QR code", "Grok", "Grok Bot", "SpaceXAI", "referral", "generator", "batch print", "CSV upload", "secure", "private", "client-side"],
+  authors: [{ name: "SpaceXAI" }],
+  creator: "Grok Bot / SpaceXAI",
+  publisher: "SpaceXAI",
   
   // Open Graph
   openGraph: {
     type: "website",
-    title: "Cursor Credits QR Code Generator - Secure & Private",
-    description: "Securely generate multiple QR codes from Cursor referral links. All processing happens client-side in your browser - no data sent to servers. Print in 9-per-page format.",
-    url: "https://cursor-credits-qr.vercel.app", // Update with your actual domain
-    siteName: "Cursor Credits QR Generator",
+    title: "Grok Bot Credits QR Code Generator - SpaceXAI",
+    description: "Generate printable QR codes from Cursor referral / credit links. Branded for Grok Bot by SpaceXAI. All processing happens client-side.",
+    url: "https://cursor-qr.vercel.app",
+    siteName: "Grok Bot Credits QR Generator",
     images: [
       {
         url: "/og-img.png",
         width: 1200,
         height: 630,
-        alt: "Cursor Credits QR Code Generator",
+        alt: "Grok Bot Credits QR Code Generator",
       },
     ],
   },
@@ -53,10 +53,10 @@ export const metadata: Metadata = {
   // Twitter
   twitter: {
     card: "summary_large_image",
-    title: "Cursor Credits QR Code Generator - Secure & Private",
-    description: "Securely generate QR codes from Cursor referral links. All processing client-side - no data sent to servers. Privacy-first design.",
+    title: "Grok Bot Credits QR Code Generator - SpaceXAI",
+    description: "Generate printable QR codes from Cursor referral / credit links. Branded for Grok Bot by SpaceXAI.",
     images: ["/og-img.png"],
-    creator: "@cursor",
+    creator: "@xai",
   },
   
   // Favicon and icons
