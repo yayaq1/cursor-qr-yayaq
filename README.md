@@ -23,11 +23,11 @@ Upload a CSV file with your links (or paste them manually) and get a clean, prin
 This app uses a special numbering system designed for easy physical organization after printing.
 
 **How it works:**
-- Instead of numbering 1-9 on page 1, 10-18 on page 2, etc.
+- Instead of numbering 1–9 on page 1, 10–18 on page 2, etc.
 - The same grid position across all pages gets consecutive numbers
-- Page 1: 1, 12, 23, 34, 45, 56, 67, 78, 89
-- Page 2: 2, 13, 24, 35, 46, 57, 68, 79, 90
-- Page 3: 3, 14, 25, 36, 47, 58, 69, 80, 91
+- With *P* pages total, page 1 shows `#1`, `#1+P`, `#1+2P`, … in reading order across the 3×3 grid
+- Example for 99 codes (11 pages): page 1 is `1, 12, 23, 34, 45, 56, 67, 78, 89`; page 2 is `2, 13, 24, …`
+- For 120 codes (14 pages): page 1 is `1, 15, 29, 43, 57, 71, 85, 99, 113`; the last page only fills slots whose numbers are ≤ 120
 
 **After printing:**
 1. Cut each page into 9 squares along the grid lines

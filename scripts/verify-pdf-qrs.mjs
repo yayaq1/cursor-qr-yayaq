@@ -1,6 +1,5 @@
 /**
- * Upload credits-sample.csv, export print PDF, decode every QR from PDF page
- * renders (and canvas fallback). Expects 120 sequential cards.
+ * Verify cut-and-stack print sheets: every card #N encodes expected[N-1].
  */
 import { chromium } from 'playwright';
 import fs from 'fs';
@@ -30,7 +29,7 @@ function scaleNx(png, n) {
 
 function tryDecodePngBuffer(buf) {
   const png = PNG.sync.read(buf);
-  for (const n of [1, 2, 3, 4]) {
+  for (const n of [1, 2, 3]) {
     const img = n === 1 ? png : scaleNx(png, n);
     const code = jsQR(new Uint8ClampedArray(img.data), img.width, img.height, {
       inversionAttempts: 'attemptBoth',
@@ -49,31 +48,50 @@ await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
 await page.getByRole('button', { name: 'Upload CSV File' }).click();
 await page.locator('input[type="file"]').setInputFiles('/workspace/fixtures/credits-sample.csv');
 await page.waitForSelector('text=QR Codes (120)', { timeout: 20000 });
-await page.waitForTimeout(3500);
+await page.waitForTimeout(3000);
 
 await page.emulateMedia({ media: 'print' });
 await page.waitForTimeout(2500);
 
-const numbers = (await page.locator('.print-qr-item .qr-number').allTextContents())
-  .map((t) => t.trim())
-  .filter(Boolean);
-console.log('first9', numbers.slice(0, 9));
-console.log('last3', numbers.slice(-3));
-console.log('sequential', numbers.every((t, i) => t === `#${i + 1}`), 'count', numbers.length);
+// Per filled print cell: number + canvas decode, keyed by card number
+const cells = page.locator('.print-qr-item');
+const cellCount = await cells.count();
+const byNumber = new Map();
+const page0Numbers = [];
 
-// Canvas decode
-const canvases = page.locator('.print-qr-item canvas');
-const nCanvas = await canvases.count();
-const decodedCanvas = [];
-fs.mkdirSync('/tmp/qr-canvases', { recursive: true });
-for (let i = 0; i < nCanvas; i++) {
-  const dataUrl = await canvases.nth(i).evaluate((c) => c.toDataURL('image/png'));
+for (let i = 0; i < cellCount; i++) {
+  const cell = cells.nth(i);
+  const numLoc = cell.locator('.qr-number');
+  if ((await numLoc.count()) === 0) continue;
+  const numText = (await numLoc.innerText()).trim();
+  if (!numText) continue;
+  const n = parseInt(numText.replace('#', ''), 10);
+  const canvas = cell.locator('canvas');
+  if ((await canvas.count()) === 0) {
+    byNumber.set(n, { decoded: null, missingCanvas: true });
+    continue;
+  }
+  const dataUrl = await canvas.evaluate((c) => c.toDataURL('image/png'));
   const buf = Buffer.from(dataUrl.split(',')[1], 'base64');
-  if (i < 3 || i === 119) fs.writeFileSync(`/tmp/qr-canvases/${i + 1}.png`, buf);
-  decodedCanvas.push(tryDecodePngBuffer(buf));
+  const decoded = tryDecodePngBuffer(buf);
+  byNumber.set(n, { decoded });
+  if (page0Numbers.length < 9) page0Numbers.push(numText);
 }
-const canvasOk = decodedCanvas.filter((d, i) => d === expected[i]).length;
-console.log('canvas decode', canvasOk, '/', expected.length);
+
+console.log('page1 numbers (DOM order)', page0Numbers);
+console.log('filled', byNumber.size);
+
+let ok = 0;
+const failures = [];
+for (let n = 1; n <= 120; n++) {
+  const entry = byNumber.get(n);
+  const got = entry?.decoded ?? null;
+  const exp = expected[n - 1];
+  if (got === exp) ok++;
+  else failures.push({ n, got, expected: exp, missing: !entry });
+}
+
+console.log(JSON.stringify({ ok, failCount: failures.length, sampleFails: failures.slice(0, 5) }, null, 2));
 
 const pdfPath = '/opt/cursor/artifacts/pdf/credits-sample-120.pdf';
 await page.pdf({
@@ -83,16 +101,12 @@ await page.pdf({
   preferCSSPageSize: true,
   margin: { top: '0', right: '0', bottom: '0', left: '0' },
 });
-console.log('wrote pdf', fs.statSync(pdfPath).size);
+console.log('pdf', fs.statSync(pdfPath).size);
 await browser.close();
 
 fs.writeFileSync(
-  '/tmp/decode-canvas-results.json',
-  JSON.stringify({ canvasOk, decodedCanvas }, null, 2)
+  '/tmp/decode-by-number.json',
+  JSON.stringify({ ok, failures, page0Numbers }, null, 2)
 );
-
-if (canvasOk !== 120) {
-  console.error('FAIL canvas decode');
-  process.exit(2);
-}
-console.log('PASS 120/120');
+if (ok !== 120) process.exit(2);
+console.log('PASS 120/120 by card number');

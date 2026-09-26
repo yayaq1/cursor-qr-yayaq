@@ -26,22 +26,18 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_QR_CODES = 750;
 const ALLOWED_SCHEMES = ['http:', 'https:'];
 
-// Grid configuration for printable sheets (reading order: L→R, T→B)
+// Grid configuration for cut-and-stack collation
 const GRID_ROWS = 3;
 const GRID_COLS = 3;
 const CELLS_PER_PAGE = GRID_ROWS * GRID_COLS;
 
-/** Sequential card number for a grid cell (page-major reading order), or null if empty. */
-function numberForCell(
-  pageIndex: number,
-  rowIndex: number,
-  colIndex: number,
-  _rows: number,
-  cols: number,
-  total: number
-): number | null {
-  const n = pageIndex * CELLS_PER_PAGE + rowIndex * cols + colIndex + 1;
-  return n <= total ? n : null;
+// Calculate the number for a specific cell position using cut-and-stack collation
+function numberForCell(p: number, r: number, c: number, R: number, C: number, N: number): number | null {
+  const S = R * C;
+  const P = Math.ceil(N / S);
+  const s = r * C + c;
+  const n = s * P + (p + 1);
+  return n <= N ? n : null;
 }
 
 function QRCodeGeneratorContent() {
@@ -689,7 +685,7 @@ function QRCodeGeneratorContent() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.2, delay: 0.1 }}
         >
-          Print layout: 9 cards per A4 page, numbered left-to-right then top-to-bottom (#1–#9 on page 1, and so on)
+          💡 Numbers are positioned for easy stacking: after printing, cut pages into squares and stack by position for perfect order
         </motion.p>
         
         <motion.div 
