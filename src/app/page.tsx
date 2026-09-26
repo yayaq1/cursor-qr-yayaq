@@ -3,9 +3,9 @@
 import { useState, useRef } from 'react';
 import { QRCode } from 'react-qrcode-logo';
 import { motion, AnimatePresence } from 'framer-motion';
-import Papa from 'papaparse';
 import { ToastContainer, ToastType } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { CURSOR_BASE_URL, extractUrlsFromCsv } from '@/lib/csvUrls';
 
 interface QRCodeData {
   id: number;
@@ -25,9 +25,6 @@ interface ToastMessage {
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_QR_CODES = 750;
 const ALLOWED_SCHEMES = ['http:', 'https:'];
-
-// Cursor URL constant
-const CURSOR_BASE_URL = 'https://cursor.com/';
 
 // Grid configuration for cut-and-stack collation
 const GRID_ROWS = 3;
@@ -283,124 +280,77 @@ function QRCodeGeneratorContent() {
         );
       }
 
-      // Use PapaParse for proper CSV parsing
-      Papa.parse(text, {
-        header: false,
-        skipEmptyLines: true,
-        complete: (results) => {
-          try {
-            const urls: string[] = [];
-            
-            // Extract URLs from CSV, skip header row
-            for (let i = 0; i < results.data.length; i++) {
-              const row = results.data[i] as string[];
-              if (i === 0 && row[0]?.toLowerCase().includes('url')) {
-                // Skip header row
-                continue;
-              }
-              
-              // Check if this looks like a split Cursor URL format
-              let foundReferral = false;
-              for (let j = 0; j < row.length; j++) {
-                if (row[j] && row[j].trim() && row[j].toLowerCase().startsWith('referral')) {
-                  // Found the referral column - build the full URL
-                  const referralPath = row[j].trim();
-                  const fullUrl = `${CURSOR_BASE_URL}${referralPath}`;
-                  urls.push(fullUrl);
-                  foundReferral = true;
-                  break;
-                }
-              }
-              
-              // If we didn't find a referral column, check if it's a standard complete URL
-              if (!foundReferral && row[0] && row[0].trim()) {
-                const url = row[0].trim();
-                // Check if it's already a complete URL (starts with http:// or https://)
-                if (url.startsWith('http://') || url.startsWith('https://')) {
-                  urls.push(url);
-                } else if (url.toLowerCase().startsWith('referral')) {
-                  // Just the referral path without base URL
-                  urls.push(`${CURSOR_BASE_URL}${url}`);
-                } else {
-                  // Unknown format, add as-is
-                  urls.push(url);
-                }
-              }
-            }
+      try {
+        const { urls } = extractUrlsFromCsv(text);
 
-            if (urls.length === 0) {
-              showToast(
-                'No valid URLs found in the CSV file. Please ensure URLs are in the first column.',
-                'error'
-              );
-              setIsProcessing(false);
-              return;
-            }
-
-            if (urls.length > MAX_QR_CODES) {
-              showToast(
-                `Processing first ${MAX_QR_CODES} of ${urls.length} URLs (maximum limit).`,
-                'warning'
-              );
-            }
-
-            setLinks(urls.slice(0, MAX_QR_CODES).join('\n'));
-            
-            // Auto-generate QR codes
-            setTimeout(() => {
-              const linkList = urls.slice(0, MAX_QR_CODES);
-              let invalidCount = 0;
-              let warningCount = 0;
-
-              const qrCodeData: QRCodeData[] = linkList.map((link, index) => {
-                const isValid = isValidUrl(link);
-                const normalizedUrl = isValid ? normalizeUrl(link) : link;
-                const suspiciousCheck = checkSuspiciousUrl(normalizedUrl);
-
-                if (!isValid) invalidCount++;
-                if (suspiciousCheck.hasWarning) warningCount++;
-
-                return {
-                  id: index + 1,
-                  url: normalizedUrl,
-                  isValid,
-                  hasWarning: suspiciousCheck.hasWarning,
-                  warningMessage: suspiciousCheck.message,
-                };
-              });
-
-              setQrCodes(qrCodeData);
-              setIsProcessing(false);
-
-              // Show results only for errors/warnings
-              if (invalidCount > 0) {
-                showToast(
-                  `Processed ${qrCodeData.length} URLs from CSV. ${invalidCount} invalid URL(s) found.`,
-                  'warning'
-                );
-              } else if (warningCount > 0) {
-                showToast(
-                  `Processed ${qrCodeData.length} URLs with ${warningCount} warning(s).`,
-                  'info'
-                );
-              }
-              // No success toast - cleaner UX
-            }, 100);
-          } catch (error) {
-            console.error('Error processing CSV:', error);
-            showToast('Failed to process CSV file. Please check the file format and try again.', 'error');
-            setIsProcessing(false);
-          }
-        },
-        error: (error: Error) => {
-          console.error('CSV parsing error:', error);
+        if (urls.length === 0) {
           showToast(
-            `CSV parsing failed: ${error.message}. Please ensure the file is properly formatted.`,
+            'No valid URLs found in the CSV file. Include a URL/link column, or a single column of URLs.',
             'error'
           );
           setIsProcessing(false);
-        },
-      });
+          return;
+        }
+
+        if (urls.length > MAX_QR_CODES) {
+          showToast(
+            `Processing first ${MAX_QR_CODES} of ${urls.length} URLs (maximum limit).`,
+            'warning'
+          );
+        }
+
+        setLinks(urls.slice(0, MAX_QR_CODES).join('\n'));
+
+        // Auto-generate QR codes
+        setTimeout(() => {
+          const linkList = urls.slice(0, MAX_QR_CODES);
+          let invalidCount = 0;
+          let warningCount = 0;
+
+          const qrCodeData: QRCodeData[] = linkList.map((link, index) => {
+            const isValid = isValidUrl(link);
+            const normalizedUrl = isValid ? normalizeUrl(link) : link;
+            const suspiciousCheck = checkSuspiciousUrl(normalizedUrl);
+
+            if (!isValid) invalidCount++;
+            if (suspiciousCheck.hasWarning) warningCount++;
+
+            return {
+              id: index + 1,
+              url: normalizedUrl,
+              isValid,
+              hasWarning: suspiciousCheck.hasWarning,
+              warningMessage: suspiciousCheck.message,
+            };
+          });
+
+          setQrCodes(qrCodeData);
+          setIsProcessing(false);
+
+          // Show results only for errors/warnings
+          if (invalidCount > 0) {
+            showToast(
+              `Processed ${qrCodeData.length} URLs from CSV. ${invalidCount} invalid URL(s) found.`,
+              'warning'
+            );
+          } else if (warningCount > 0) {
+            showToast(
+              `Processed ${qrCodeData.length} URLs with ${warningCount} warning(s).`,
+              'info'
+            );
+          }
+          // No success toast - cleaner UX
+        }, 100);
+      } catch (error) {
+        console.error('Error processing CSV:', error);
+        showToast(
+          error instanceof Error
+            ? `CSV parsing failed: ${error.message}. Please ensure the file is properly formatted.`
+            : 'Failed to process CSV file. Please check the file format and try again.',
+          'error'
+        );
+        setIsProcessing(false);
+      }
     } catch (error) {
       console.error('File upload error:', error);
       showToast('Failed to read file. Please try again with a different file.', 'error');
