@@ -148,4 +148,28 @@ section('120-row shaped sample count');
   );
 }
 
+section('owner credits-sample.csv fixture');
+{
+  const { readFileSync } = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const { dirname, join } = await import('node:path');
+  const fixturePath = join(
+    dirname(fileURLToPath(import.meta.url)),
+    '../../fixtures/credits-sample.csv'
+  );
+  const result = extractUrlsFromCsv(readFileSync(fixturePath, 'utf8'));
+  assert.equal(result.skippedHeader, true);
+  assert.equal(result.urlColumnIndex, 1);
+  assert.equal(result.urls.length, 120);
+  assert.equal(
+    result.urls[0],
+    'https://cursor.com/referral?code=YAHYA-K8X17RIUV3CP'
+  );
+  assert.ok(
+    result.urls.every((u) =>
+      u.startsWith('https://cursor.com/referral?code=')
+    )
+  );
+}
+
 console.log('\n✓ All csvUrls tests passed\n');
